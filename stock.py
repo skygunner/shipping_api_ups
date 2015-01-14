@@ -33,6 +33,7 @@ import tools
 from tools.translate import _
 from openerp.osv import fields, osv
 import os
+from . import api
 
 class shipping_move(osv.osv):
     
@@ -604,7 +605,9 @@ class stock_picking_out(osv.osv):
         else:
             return message
 
+
     def process_ship(self, cr, uid, ids, context=None):
+        # TODO: Let admin choose printer name.
         res = {
             'type': 'ir.actions.client',
             'tag': 'printer_proxy.print',
@@ -613,35 +616,59 @@ class stock_picking_out(osv.osv):
         }
         data = self.browse(cr, uid, type(ids) == type([]) and ids[0] or ids, context=context)
 
-        # Pass on up this function call if the shipping company specified was not USPS.
-        if data.ship_company_code != 'usps':
-            return super(_base_stock_picking, self).process_ship(cr, uid, ids, context=context)
-
-        if deliv_order.ship_company_code != 'ups':
+        # Pass on up this function call if the shipping company specified was not UPS.
+        if data.ship_company_code != 'ups':
             return super(stock_picking_out, self).process_ship(cr, uid, ids, context=context)
 
-        if not (deliv_order.logis_company or deliv_order.shipper or deliv_order.ups_service):
-            raise osv.except_osv("Warning", "Please select Logistics Company, Shipper and Shipping Service")
-        if not deliv_order.packages_ids:
-            raise osv.except_osv("Warning", "Please add shipping packages before doing Process Shipping.")
-        if deliv_order.sale_id and deliv_order.sale_id.order_policy == 'credit_card' and not deliv_order.sale_id.invoiced:
-            if not deliv_order.sale_id.cc_pre_auth:
-                raise osv.except_osv("Warning", "The sales order is not paid")
-            else:
-                do_transaction = False
-                rel_voucher_id = deliv_order.sale_id.rel_account_voucher_id
-                if rel_voucher_id and rel_voucher_id.state != 'posted' and deliv_order.sale_id.cc_pre_auth:
-                    vals_vouch = {'cc_p_authorize': False, 'cc_charge': True}
-                    if 'trans_type' in rel_voucher_id._columns.keys():
-                        vals_vouch.update({'trans_type': 'PriorAuthCapture'})
-                    self.pool.get('account.voucher').write(cr, uid, [rel_voucher_id.id], vals_vouch, context=context)
-                    do_transaction = self.pool.get('account.voucher').authorize(cr, uid, [rel_voucher_id.id], context=context)
-            if not do_transaction:
-                self.write(cr, uid, ids, {'ship_state': 'hold', 'ship_message': 'Unable to process creditcard payment.'}, context=context)
-                cr.commit()
-                raise osv.except_osv(_('Final credit card charge cannot be completed!'), _("Please hold shipment and contact customer service.."))
+        if not (data.logis_company or data.shipper or data.ups_service):
+            raise osv.except_osv("Warning", "Please select a Logistics Company, Shipper and Shipping Service.")
 
-        return False
+        if not (data.logis_company and data.logis_company.ship_company_code == 'ups'):
+            return super(stock_picking_out, self).process_ship(cr, uid, ids, context=context)
+
+        if not data.packages_ids or len(data.packages_ids) == 0:
+            raise osv.except_osv("Warning", "Please define your packages.")
+
+        error = False
+        ups_config = api.v1.get_config(cr, uid, sale=data.sale_id, context=context)
+
+        for pkg in data.packages_ids:
+            try:
+                # Get the shipping label, store it, and return it.
+                label = api.v1.get_label(ups_config, data, pkg)
+                res['params']['data'].append(base64.b64encode(label.label))
+                self.pool.get('stock.packages').write(cr, uid, [pkg.id], {
+                    'logo':label.label, 'tracking_no': label.tracking,
+                    'ship_message': 'Shipment has processed'
+                })
+
+            except Exception, e:
+                if not error:
+                    error = []
+                error_str = str(e)
+                error.append(error_str)
+
+            cr.commit()
+            if error:
+                self.pool.get('stock.packages').write(cr, uid, pkg.id, {'ship_message': error_str}, context=context)
+
+        if not error:
+            self.write(cr, uid, data.id, {
+                'ship_state':'ready_pick', 'ship_message': 'Shipment has been processed.'
+            }, context=context)
+
+            return res
+        else:
+            self.write(cr, uid, data.id, {
+                'ship_message': 'Error occured on processing some of packages, ' +
+                                'for details please see the status packages.'
+            }, context=context)
+
+            # @todo: raise appropriate error msg
+            raise osv.except_osv(_('Errors encountered while processing packages'), _(str(error)))
+
+        return res
+
 
     def _get_journal_id(self, cr, uid, ids, context=None):
         journal_obj = self.pool.get('account.journal')
