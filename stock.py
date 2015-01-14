@@ -607,12 +607,19 @@ class stock_picking_out(osv.osv):
 
 
     def process_ship(self, cr, uid, ids, context=None):
-        # TODO: Let admin choose printer name.
+        company = self.pool.get('res.users').browse(cr, uid, uid, context=context).company_id
         res = {
             'type': 'ir.actions.client',
             'tag': 'printer_proxy.print',
             'name': _('Print Shipping Label'),
-            'params': {'printer_name': 'zebra', 'data': [], 'format': 'epl2'}
+            'params': {
+                'printer_name': company.printer_proxy_device_name,
+                'url': company.printer_proxy_url,
+                'username': company.printer_proxy_username,
+                'password': company.printer_proxy_password,
+                'data': [],
+                'format': 'epl2'
+            }
         }
         data = self.browse(cr, uid, type(ids) == type([]) and ids[0] or ids, context=context)
 
