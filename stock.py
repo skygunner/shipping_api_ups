@@ -655,7 +655,6 @@ class stock_picking_out(osv.osv):
                 error_str = str(e)
                 error.append(error_str)
 
-            cr.commit()
             if error:
                 self.pool.get('stock.packages').write(cr, uid, pkg.id, {'ship_message': error_str}, context=context)
 
@@ -671,8 +670,16 @@ class stock_picking_out(osv.osv):
                                 'for details please see the status packages.'
             }, context=context)
 
-            # @todo: raise appropriate error msg
-            raise osv.except_osv(_('Errors encountered while processing packages'), _(str(error)))
+            res = {
+                'type': 'ir.actions.client',
+                'tag': 'action_warn',
+                'name': 'Failure',
+                'params': {
+                   'title': 'Package Errors',
+                   'text': 'Errors encountered while processing packages. Look at package ship messages for details.',
+                   'sticky': True
+                }
+            }
 
         return res
 
