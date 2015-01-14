@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<AccessRequest xml:lang="en-US">
+   <AccessLicenseNumber>${credentials.get("access_license")}</AccessLicenseNumber>
+  <UserId>${credentials.get("username")}</UserId>
+  <Password>${credentials.get("password")}</Password>
+</AccessRequest>
+<?xml version="1.0" encoding="UTF-8"?>
+<VoidShipmentRequest>
+  <Request>
+    <TransactionReference>
+      <XpciVersion>1.0001</XpciVersion>
+    </TransactionReference>
+    <RequestAction>Void</RequestAction>
+    <RequestOption />
+  </Request>
+  <ExpandedVoidShipment>
+    <ShipmentIdentificationNumber>${packages[0].shipment_identific_no}</ShipmentIdentificationNumber>
+% for package in packages:
+    <TrackingNumber>${package.tracking_no}</TrackingNumber>
+% endfor
+  </ExpandedVoidShipment>
+</VoidShipmentRequest>

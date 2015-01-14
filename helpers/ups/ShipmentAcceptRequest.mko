@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<AccessRequest xml:lang="en-US">
+   <AccessLicenseNumber>${credentials.get("access_license")}</AccessLicenseNumber>
+  <UserId>${credentials.get("username")}</UserId>
+  <Password>${credentials.get("password")}</Password>
+</AccessRequest>
+<?xml version="1.0" encoding="UTF-8"?>
+<ShipmentAcceptRequest>
+    <Request>
+        <RequestAction>ShipAccept</RequestAction>
+    </Request>
+    <ShipmentDigest>${digest}</ShipmentDigest>
+</ShipmentAcceptRequest>

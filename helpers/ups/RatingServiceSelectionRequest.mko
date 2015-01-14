@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<AccessRequest xml:lang="en-US">
+   <AccessLicenseNumber>${credentials.get("access_license")}</AccessLicenseNumber>
+  <UserId>${credentials.get("username")}</UserId>
+  <Password>${credentials.get("password")}</Password>
+</AccessRequest>
+<?xml version="1.0" encoding="UTF-8"?>
+<RatingServiceSelectionRequest xml:lang="en-US">
+  <Request>
+    <RequestAction>Rate</RequestAction>
+    <RequestOption>Shop</RequestOption>
+  </Request>
+    <PickupType>
+      <Code>07</Code>
+      <Description>Rate</Description>
+    </PickupType>
+  <Shipment>
+% if credentials.get("negotiated_rates"):
+    <RateInformation>
+      <NegotiatedRatesIndicator/>
+    </RateInformation>
+% endif
+    <Shipper>
+      <Name>${shipper.name or shipper.company_name}</Name>
+% if shipper.phone:
+      <PhoneNumber>${shipper.phone}</PhoneNumber>
+% endif
+      <Address>
+        <AddressLine1>${shipper.address1}</AddressLine1>
+% if shipper.address2:
+        <AddressLine2>${shipper.address2}</AddressLine2>
+% endif
+        <City>${shipper.city}</City>
+        <StateProvinceCode>${shipper.state}</StateProvinceCode>
+        <PostalCode>${shipper.zip}</PostalCode>
+        <CountryCode>${shipper.country_code}</CountryCode>
+      </Address>
+    </Shipper>
+    <ShipTo>
+      <CompanyName>${recipient.company_name or recipient.name}</CompanyName>
+% if recipient.phone:
+      <PhoneNumber>${recipient.phone}</PhoneNumber>
+% endif
+      <Address>
+        <AddressLine1>${recipient.address1}</AddressLine1>
+% if recipient.address2:
+        <AddressLine2>${recipient.address2}</AddressLine2>
+% endif
+        <City>${recipient.city}</City>
+        <StateProvinceCode>${recipient.state}</StateProvinceCode>
+        <PostalCode>${recipient.zip}</PostalCode>
+        <CountryCode>${recipient.country_code}</CountryCode>
+      </Address>
+    </ShipTo>
+    <ShipFrom>
+      <CompanyName>${shipper.company_name or shipper.name}</CompanyName>
+% if shipper.phone:
+      <PhoneNumber>${shipper.phone}</PhoneNumber>
+% endif
+      <Address>
+        <AddressLine1>${shipper.address1}</AddressLine1>
+% if shipper.address2:
+        <AddressLine2>${shipper.address2}</AddressLine2>
+% endif
+        <City>${shipper.city}</City>
+        <StateProvinceCode>${shipper.state}</StateProvinceCode>
+        <PostalCode>${shipper.zip}</PostalCode>
+        <CountryCode>${shipper.country_code}</CountryCode>
+      </Address>
+    </ShipFrom>
+    <Package>
+          <PackagingType>
+            <Code>${package.shape.code}</Code>
+            <Description>${package.shape.name}</Description>
+          </PackagingType>
+          <PackageWeight>
+            <UnitOfMeasurement>
+              <Code>LBS</Code>
+            </UnitOfMeasurement>
+            <Weight>${package.weight_in_lbs}</Weight>
+          </PackageWeight>   
+     </Package>
+  </Shipment>
+</RatingServiceSelectionRequest>

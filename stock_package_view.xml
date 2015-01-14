@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<openerp>
+	<data>
+		<record id="stock_packages_tree_ups" model="ir.ui.view">
+			<field name="name">stock.packages.tree.ups</field>
+			<field name="model">stock.packages</field>
+			<field name="inherit_id" ref="shipping_api.stock_packages_tree" />
+			<field name="arch" type="xml">
+				<xpath expr="//field[@name='decl_val']" position="after">
+					<field name='highvalue' invisible="1"/>
+					<field name='att_file_name' invisible='1'/>
+				</xpath>
+			</field>
+		</record>
+	</data>
+</openerp>

@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<AccessRequest xml:lang="en-US">
+   <AccessLicenseNumber>${credentials.get("access_license")}</AccessLicenseNumber>
+  <UserId>${credentials.get("username")}</UserId>
+  <Password>${credentials.get("password")}</Password>
+</AccessRequest>
+<?xml version="1.0" encoding="UTF-8"?>
+<ShipmentConfirmRequest xml:lang="en-US">
+  <Request>
+    <RequestAction>ShipConfirm</RequestAction>
+    <RequestOption>validate</RequestOption>
+  </Request>
+  <LabelSpecification>
+    <LabelPrintMethod>
+      <Code>${image_format[:3]}</Code>
+    </LabelPrintMethod>
+    <HTTPUserAgent>Mozilla/4.5</HTTPUserAgent>
+    <LabelImageFormat>
+% if image_format == "GIF":
+      <Code>GIF</Code>
+% endif
+      <Description>${image_format}</Description>
+    </LabelImageFormat>
+% if image_format[:3] == "EPL":
+    <LabelStockSize>
+        <Height>4</Height>
+        <Width>6</Width>
+    </LabelStockSize>
+% endif
+  </LabelSpecification>
+  <Shipment>
+% if credentials.get("negotiated_rates"):
+    <RateInformation>
+      <NegotiatedRatesIndicator/>
+    </RateInformation>
+% endif
+% if customs:
+    <Description>${customs.contents_type}</Description>
+% endif
+    <Shipper>
+      <ShipperNumber>${credentials.get("shipper_number")}</ShipperNumber>
+      <Name>${(shipper.company_name or shipper.name)[:35]}</Name>
+      <AttentionName>${(shipper.name or shipper.company_name)[:35]}</AttentionName>
+% if shipper.phone:
+      <PhoneNumber>${shipper.phone}</PhoneNumber>
+% endif
+      <Address>
+        <AddressLine1>${shipper.address1[:35]}</AddressLine1>
+% if shipper.address2:
+        <AddressLine2>${shipper.address2[:35]}</AddressLine2>
+% endif
+        <City>${shipper.city[:30]}</City>
+        <StateProvinceCode>${shipper.state[:5]}</StateProvinceCode>
+        <PostalCode>${shipper.zip}</PostalCode>
+        <CountryCode>${shipper.country_code}</CountryCode>
+      </Address>
+    </Shipper>
+  <ShipTo>
+      <CompanyName>${(recipient.company_name or recipient.name)[:35]}</CompanyName>
+      <AttentionName>${(recipient.name or recipient.company_name)[:35]}</AttentionName>
+% if recipient.phone:
+      <PhoneNumber>${recipient.phone}</PhoneNumber>
+% endif
+      <Address>
+        <AddressLine1>${recipient.address1[:35]}</AddressLine1>
+% if recipient.address2:
+        <AddressLine2>${recipient.address2[:35]}</AddressLine2>
+% endif
+        <City>${recipient.city[:30]}</City>
+        <StateProvinceCode>${recipient.state[:5]}</StateProvinceCode>
+        <PostalCode>${recipient.zip}</PostalCode>
+        <CountryCode>${recipient.country_code}</CountryCode>
+% if recipient.is_residence:
+        <ResidentialAddress />
+% endif
+      </Address>
+    </ShipTo>
+     <PaymentInformation>
+      <Prepaid>
+        <BillShipper>
+          <AccountNumber>${credentials.get("shipper_number")}</AccountNumber>
+        </BillShipper>
+      </Prepaid>
+    </PaymentInformation>
+    <Service>
+      <Code>${package.mail_class}</Code>
+    </Service>
+    <Package>
+      <PackagingType>
+        <Code>${package.shape.code}</Code>
+        <Description>${package.shape.name}</Description>
+      </PackagingType>
+      <PackageWeight>
+        <UnitOfMeasurement>
+          <Code>LBS</Code>
+        </UnitOfMeasurement>
+        <Weight>${package.weight_in_lbs}</Weight>
+      </PackageWeight>
+      <Dimensions>
+        <UnitOfMeasurement>
+          <Code>IN</Code>
+        </UnitOfMeasurement>
+        <Length>${package.length}</Length>
+        <Width>${package.width}</Width>
+        <Height>${package.height}</Height>
+      </Dimensions>
+    </Package>
+% if customs:
+    <InternationalForms>
+      <FormType>01</FormType>
+      <CurrencyCode>USD</CurrencyCode>
+  % for item in customs.items:
+      <Product>
+        <Description>${item.description}</Description>
+        <Unit>
+          <Number>${item.quantity}</Number>
+          <Value>${item.value}</Value>
+          <UnitOfMeasurement>
+            <Code>PKG</Code>
+          </UnitOfMeasurement>
+        </Unit>
+        <CommodityCode>${customs.commodity_code}</CommodityCode>
+        <OriginCountryCode>${item.country_of_origin}</OriginCountryCode>
+        <PackingListInfo>
+          <PackageAssociated>
+            <PackageNumber>1</PackageNumber>
+            <ProductAmount>${item.quantity}</ProductAmount>
+            <InvoiceDate>${invoice_date}</InvoiceDate>
+            <ReasonForExport>SALE</ReasonForExport>
+          </PackageAssociated>
+        </PackingListInfo>
+      </Product>
+  % endfor
+    </InternationalForms>
+    <InvoiceLineTotal>
+      <MonetaryValue>${str(package.value).replace(".", "")}</MonetaryValue>
+    </InvoiceLineTotal>
+% endif
+  </Shipment>
+</ShipmentConfirmRequest>

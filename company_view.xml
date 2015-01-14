@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<openerp>
+	<data>
+		<record id="company_shipping" model="ir.ui.view">
+			<field name="name">res.company.ups.config</field>
+			<field name="model">res.company</field>
+			<field name="inherit_id" ref="base.view_company_form"/>
+			<field name="arch" type="xml">
+				<page string="Configuration" position="inside">
+					<newline/>
+					<separator string="UPS" colspan="4"/>
+					<newline/>
+                    <group colspan="4" col="4">
+                        <field name="ups_account_shipping_id" />
+                    </group>
+                    <newline/>
+				</page>
+			</field>
+		</record>
+
+	</data>
+</openerp>

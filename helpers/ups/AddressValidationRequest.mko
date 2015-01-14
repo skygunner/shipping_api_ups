@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<AccessRequest xml:lang="en-US">
+    <AccessLicenseNumber>${credentials.get("access_license")}</AccessLicenseNumber>
+    <UserId>${credentials.get("username")}</UserId>
+    <Password>${credentials.get("password")}</Password>
+</AccessRequest>
+<?xml version="1.0" ?>
+<AddressValidationRequest xml:lang='en-US'>
+    <Request>
+        <TransactionReference>
+            <CustomerContext />
+            <XpciVersion>1.0001</XpciVersion>
+        </TransactionReference>
+        <RequestAction>XAV</RequestAction>
+        <RequestOption>1</RequestOption>
+    </Request>
+    <MaximumListSize>3</MaximumListSize>
+    <AddressKeyFormat>
+        <ConsigneeName>${address.name or address.company_name}</ConsigneeName>
+        <BuildingName>${address.company_name or address.name}</BuildingName>
+        <AddressLine>${address.address1[:35]}</AddressLine>
+% if address.address2:
+        <AddressLine>${address.address2[:35]}</AddressLine>
+% endif
+        <PostcodePrimaryLow>${address.zip[:5]}</PostcodePrimaryLow>
+% if recipient.zip[5:]:
+        <PostcodeExtendedLow>${address.zip[5:]}</PostcodeExtendedLow>
+% endif
+        <CountryCode>${address.country_code}</CountryCode>
+    </AddressKeyFormat>
+</AddressValidationRequest>
