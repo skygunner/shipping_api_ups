@@ -47,7 +47,7 @@
         'security/security.xml',
         ],
     'demo': ['demo/shipping_service_demo.xml'],
-    'test': ['test/shipping_api_ups.yml'],
+    #'test': ['test/shipping_api_ups.yml'],
     'installable': True,
     'active': False,
 }
